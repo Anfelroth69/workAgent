@@ -25,18 +25,18 @@ done
 echo "[entrypoint] Creating Pico Claw configuration..."
 mkdir -p /root/.picoclaw
 
-cat > /root/.picoclaw/config.json << 'CONFIGEOF'
+cat > /root/.picoclaw/config.json << CONFIGEOF
 {
   "version": 2,
   "agents": {
     "defaults": {
-      "model_name": "gpt-4o-mini"
+      "model_name": "deepseek/deepseek-r1"
     }
   },
   "model_list": [
     {
-      "model_name": "gpt-4o-mini",
-      "model": "openai/gpt-4o-mini",
+      "model_name": "deepseek/deepseek-r1",
+      "model": "openai/deepseek-r1",
       "api_base": "http://localhost:3001/v1",
       "api_keys": []
     }
@@ -51,7 +51,7 @@ CONFIGEOF
 
 cat > /root/.picoclaw/.security.yml << SECEOF
 model_list:
-  gpt-4o-mini:0:
+  deepseek/deepseek-r1:0:
     api_keys:
       - "${PICOCLAW_API_KEY}"
 SECEOF
