@@ -77,7 +77,7 @@ if [ -n "$PICOCLAW_LAUNCHER_TOKEN" ]; then
     echo "[entrypoint] Setting launcher password..."
     curl -sf -X POST http://127.0.0.1:18800/api/auth/setup \
         -H "Content-Type: application/json" \
-        -d "{\"password\": \"$PICOCLAW_LAUNCHER_TOKEN\"}" \
+        -d "{\"password\": \"$PICOCLAW_LAUNCHER_TOKEN\", \"confirm\": \"$PICOCLAW_LAUNCHER_TOKEN\"}" \
         > /dev/null 2>&1 && echo "[entrypoint] Password set" || echo "[entrypoint] Password setup failed (maybe already set)"
 fi
 
