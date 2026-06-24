@@ -94,7 +94,7 @@ ENTRYEOF
       "enabled": true,
       "type": "pico",
       "settings": {
-        "token": "picoclaw123",
+        
         "streaming": { "enabled": true },
         "ping_interval": 30,
         "read_timeout": 60,
@@ -147,7 +147,7 @@ else
       "enabled": true,
       "type": "pico",
       "settings": {
-        "token": "picoclaw123",
+        
         "streaming": { "enabled": true },
         "ping_interval": 30,
         "read_timeout": 60,
