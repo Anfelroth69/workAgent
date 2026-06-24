@@ -26,6 +26,7 @@ services:
       SESSION_SECRET: dev-session-secret-cambiar-en-produccion
       INITIAL_ROOT_TOKEN: dev-root-token-cambiar-en-produccion
       PICOCLAW_API_KEY: dev-picoclaw-key-cambiar-en-produccion
+      PICOCLAW_LAUNCHER_TOKEN: dev-launcher-token-cambiar-en-produccion
       PORT: "3000"
     depends_on:
       postgres:

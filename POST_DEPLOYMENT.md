@@ -62,22 +62,39 @@ Cuando el primer canal retorne rate limit (429), One API retry automáticamente 
    - **Models**: el/los modelos que usarás
    - **Expiration**: sin expiración
 3. Copia el token generado
-4. En el Dashboard de Render, actualiza la variable `PICOCLAW_API_KEY` con este token
-5. Ve a **Manual Deploy > Deploy latest commit** para reiniciar con la nueva key
+4. En el Dashboard de Render, actualiza las variables:
+   - `PICOCLAW_API_KEY` con el token que acabas de generar
+   - `PICOCLAW_LAUNCHER_TOKEN` con un token seguro para acceder al WebUI de Pico Claw
+5. Ve a **Manual Deploy > Deploy latest commit** para reiniciar con las nuevas keys
 
-## 7. Verificar que Pico Claw consume One API
+## 7. Acceder al dashboard WebUI de Pico Claw
 
-Revisa los logs en el Dashboard de Render:
+El launcher de Pico Claw está disponible en la ruta `/picoclaw/` de tu servicio:
 
 ```
-[picoclaw] One API is healthy, starting Pico Claw...
+https://one-api-picoclaw.onrender.com/picoclaw/
 ```
 
-Si ves esto, Pico Claw está conectado a One API correctamente.
+Usa el token `PICOCLAW_LAUNCHER_TOKEN` que configuraste en las variables de entorno para iniciar sesión.
 
-Para interactuar con el agente, configura un canal en Pico Claw (Telegram, Discord, etc.) editando `~/.picoclaw/config.json` via un deploy actualizado, o usa los comandos vía terminal en el contenedor.
+Desde el WebUI puedes:
+- Ver y editar la configuración de modelos (todos apuntan a One API por `localhost:3000/v1`)
+- Configurar canales (Telegram, Discord, etc.)
+- Gestionar skills y herramientas
+- Monitorear el estado del agente
 
-## 8. Workaround: mantener PostgreSQL activo (90 días)
+## 8. Verificar que Pico Claw consume One API
+
+Revisa los logs en el Dashboard de Render. Deberías ver algo como:
+
+```
+[picoclaw-launcher] started on :18800
+[picoclaw-launcher] gateway started on :18790
+```
+
+Pico Claw Launcher ya incluye el gateway y usa One API automáticamente vía `localhost:3000/v1`. La configuración se gestiona desde el WebUI en `/picoclaw/`.
+
+## 9. Workaround: mantener PostgreSQL activo (90 días)
 
 Render elimina las bases de datos Free Tier tras **90 días sin actividad**. Para evitar esto:
 
@@ -95,7 +112,7 @@ Render elimina las bases de datos Free Tier tras **90 días sin actividad**. Par
 
 Marca un recordatorio en tu calendario para hacer login a One API al menos una vez al mes.
 
-## 9. Comportamiento del Sleep Mode
+## 10. Comportamiento del Sleep Mode
 
 Render Free Tier duerme el **web service** tras ~15 minutos de inactividad:
 
@@ -117,6 +134,8 @@ La **primera petición** tras un sleep puede tardar unos segundos extra mientras
 - [ ] Al menos un canal de IA configurado con una API key válida
 - [ ] Token de Pico Claw generado en One API
 - [ ] Variable `PICOCLAW_API_KEY` actualizada en Render con el token
-- [ ] Logs muestran que Pico Claw inició correctamente
+- [ ] WebUI de Pico Claw accesible en `/picoclaw/`
+- [ ] Token `PICOCLAW_LAUNCHER_TOKEN` configurado y funciona en el WebUI
+- [ ] Logs muestran que One API y Pico Claw iniciaron correctamente
 - [ ] Health check `/api/status` responde 200
 - [ ] PostgreSQL mantiene datos tras un redeploy forzado

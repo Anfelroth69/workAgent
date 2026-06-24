@@ -1,17 +1,19 @@
-FROM justsong/one-api:latest
+FROM docker.io/sipeed/picoclaw:launcher AS launcher
+FROM justsong/one-api:latest AS one-api
 
-USER root
+FROM alpine:latest
 
-RUN apk add --no-cache supervisor wget postgresql-client
+RUN apk add --no-cache supervisor postgresql-client nginx ca-certificates tzdata curl
 
-RUN wget -qO- https://github.com/sipeed/picoclaw/releases/latest/download/picoclaw_Linux_x86_64.tar.gz \
-    | tar -xz -C /usr/local/bin/
+COPY --from=launcher /usr/local/bin/picoclaw /usr/local/bin/picoclaw
+COPY --from=launcher /usr/local/bin/picoclaw-launcher /usr/local/bin/picoclaw-launcher
+COPY --from=one-api /one-api /one-api
 
+COPY nginx.conf.template /etc/nginx/http.d/default.conf.template
 COPY supervisord.conf /etc/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh
-COPY picoclaw-gateway.sh /usr/local/bin/picoclaw-gateway.sh
 
-RUN chmod +x /entrypoint.sh /usr/local/bin/picoclaw-gateway.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 3000
 

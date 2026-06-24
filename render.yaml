@@ -23,5 +23,5 @@ services:
         sync: false
       - key: PICOCLAW_API_KEY
         sync: false
-      - key: PORT
-        value: "3000"
+      - key: PICOCLAW_LAUNCHER_TOKEN
+        sync: false

@@ -56,5 +56,9 @@ model_list:
       - "${PICOCLAW_API_KEY}"
 SECEOF
 
+echo "[entrypoint] Rendering nginx config..."
+export PORT="${PORT:-3000}"
+envsubst '${PORT}' < /etc/nginx/http.d/default.conf.template > /etc/nginx/http.d/default.conf
+
 echo "[entrypoint] Starting supervisord..."
 exec /usr/bin/supervisord -c /etc/supervisord.conf
