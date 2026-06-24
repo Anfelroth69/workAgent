@@ -9,7 +9,7 @@ COPY --from=launcher /usr/local/bin/picoclaw /usr/local/bin/picoclaw
 COPY --from=launcher /usr/local/bin/picoclaw-launcher /usr/local/bin/picoclaw-launcher
 COPY --from=one-api /one-api /one-api
 
-COPY nginx.conf.template /etc/nginx/http.d/default.conf.template
+COPY nginx.conf /etc/nginx/http.d/default.conf
 COPY supervisord.conf /etc/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh
 

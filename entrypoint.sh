@@ -37,7 +37,7 @@ cat > /root/.picoclaw/config.json << 'CONFIGEOF'
     {
       "model_name": "gpt-4o-mini",
       "model": "openai/gpt-4o-mini",
-      "api_base": "http://localhost:3000/v1",
+      "api_base": "http://localhost:3001/v1",
       "api_keys": []
     }
   ],
@@ -55,10 +55,6 @@ model_list:
     api_keys:
       - "${PICOCLAW_API_KEY}"
 SECEOF
-
-echo "[entrypoint] Rendering nginx config..."
-export PORT="${PORT:-3000}"
-envsubst '${PORT}' < /etc/nginx/http.d/default.conf.template > /etc/nginx/http.d/default.conf
 
 echo "[entrypoint] Starting supervisord..."
 exec /usr/bin/supervisord -c /etc/supervisord.conf
