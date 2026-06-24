@@ -1,13 +1,13 @@
 #!/bin/sh
 set -e
 
-HOST_PORT=$(echo "$SQL_DSN" | awk -F'[@/]' '{print $4}')
-DB_HOST=$(echo "$HOST_PORT" | cut -d: -f1)
-DB_PORT=$(echo "$HOST_PORT" | cut -d: -f2 | cut -d/ -f1)
-
-if [ -z "$DB_PORT" ]; then
-  DB_PORT=5432
-fi
+HOST_PORT=$(echo "$SQL_DSN" | sed 's/^postgres:\/\/[^@]*@//' | cut -d/ -f1)
+case "$HOST_PORT" in
+  *:*) DB_HOST=$(echo "$HOST_PORT" | cut -d: -f1)
+       DB_PORT=$(echo "$HOST_PORT" | cut -d: -f2) ;;
+  *)   DB_HOST="$HOST_PORT"
+       DB_PORT=5432 ;;
+esac
 
 echo "[entrypoint] Waiting for PostgreSQL at $DB_HOST:$DB_PORT..."
 for i in $(seq 1 30); do
