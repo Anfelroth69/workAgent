@@ -89,6 +89,20 @@ ENTRYEOF
 
   cat >> /root/.picoclaw/config.json << CONFIGEOF
   ],
+  "channel_list": {
+    "pico": {
+      "enabled": true,
+      "type": "pico",
+      "settings": {
+        "token": "picoclaw123",
+        "streaming": { "enabled": true },
+        "ping_interval": 30,
+        "read_timeout": 60,
+        "write_timeout": 10,
+        "max_connections": 100
+      }
+    }
+  },
   "gateway": {
     "host": "127.0.0.1",
     "port": 18790,
@@ -128,6 +142,20 @@ else
       "api_keys": []
     }
   ],
+  "channel_list": {
+    "pico": {
+      "enabled": true,
+      "type": "pico",
+      "settings": {
+        "token": "picoclaw123",
+        "streaming": { "enabled": true },
+        "ping_interval": 30,
+        "read_timeout": 60,
+        "write_timeout": 10,
+        "max_connections": 100
+      }
+    }
+  },
   "gateway": {
     "host": "127.0.0.1",
     "port": 18790,
