@@ -1,0 +1,27 @@
+databases:
+  - name: one-api-db
+    databaseName: oneapi
+    user: oneapi_user
+    plan: free
+
+services:
+  - type: web
+    name: one-api-picoclaw
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/status
+    envVars:
+      - key: SQL_DSN
+        fromDatabase:
+          name: one-api-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: INITIAL_ROOT_TOKEN
+        sync: false
+      - key: PICOCLAW_API_KEY
+        sync: false
+      - key: PORT
+        value: "3000"
