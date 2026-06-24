@@ -57,4 +57,29 @@ model_list:
 SECEOF
 
 echo "[entrypoint] Starting supervisord..."
-exec /usr/bin/supervisord -c /etc/supervisord.conf
+/usr/bin/supervisord -c /etc/supervisord.conf &
+
+SUPERVISOR_PID=$!
+
+if [ -n "$PICOCLAW_LAUNCHER_TOKEN" ]; then
+    echo "[entrypoint] Waiting for launcher on port 18800..."
+    for i in $(seq 1 30); do
+        if curl -sf http://127.0.0.1:18800/api/auth/status > /dev/null 2>&1; then
+            echo "[entrypoint] Launcher is ready"
+            break
+        fi
+        if [ "$i" -eq 30 ]; then
+            echo "[entrypoint] WARNING: Launcher did not start, skipping auto-setup"
+        fi
+        sleep 2
+    done
+
+    echo "[entrypoint] Setting launcher password..."
+    curl -sf -X POST http://127.0.0.1:18800/api/auth/setup \
+        -H "Content-Type: application/json" \
+        -d "{\"password\": \"$PICOCLAW_LAUNCHER_TOKEN\"}" \
+        > /dev/null 2>&1 && echo "[entrypoint] Password set" || echo "[entrypoint] Password setup failed (maybe already set)"
+fi
+
+echo "[entrypoint] All services running"
+wait "$SUPERVISOR_PID"
