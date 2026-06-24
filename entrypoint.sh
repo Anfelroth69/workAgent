@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+PICO_TOKEN="${PICOCLAW_LAUNCHER_TOKEN:-picoclaw-default-token}"
+
 HOST_PORT=$(echo "$SQL_DSN" | sed 's/^postgres:\/\/[^@]*@//' | cut -d/ -f1)
 case "$HOST_PORT" in
   *:*) DB_HOST=$(echo "$HOST_PORT" | cut -d: -f1)
@@ -82,7 +84,7 @@ CONFIGEOF
       "model_name": "$model_id",
       "model": "openai/$model_id",
       "api_base": "http://localhost:3001/v1",
-      "api_keys": []
+      "api_keys": ["$PICOCLAW_API_KEY"]
     }
 ENTRYEOF
   done
@@ -94,7 +96,7 @@ ENTRYEOF
       "enabled": true,
       "type": "pico",
       "settings": {
-        
+        "token": "$PICO_TOKEN",
         "streaming": { "enabled": true },
         "ping_interval": 30,
         "read_timeout": 60,
@@ -126,7 +128,11 @@ SECEOF
   echo "[entrypoint] Generated config with models: $(echo $MODEL_IDS | tr '\n' ' ')"
 else
   echo "[entrypoint] One API unavailable or PICOCLAW_API_KEY not set, using fallback config"
-  cat > /root/.picoclaw/config.json << 'CONFIGEOF'
+
+  FALLBACK_API_KEYS="[]"
+  [ -n "$PICOCLAW_API_KEY" ] && FALLBACK_API_KEYS='["'$PICOCLAW_API_KEY'"]'
+
+  cat > /root/.picoclaw/config.json << CONFIGEOF
 {
   "version": 2,
   "agents": {
@@ -139,7 +145,7 @@ else
       "model_name": "deepseek/deepseek-r1",
       "model": "openai/deepseek/deepseek-r1",
       "api_base": "http://localhost:3001/v1",
-      "api_keys": []
+      "api_keys": $FALLBACK_API_KEYS
     }
   ],
   "channel_list": {
@@ -147,7 +153,7 @@ else
       "enabled": true,
       "type": "pico",
       "settings": {
-        
+        "token": "$PICO_TOKEN",
         "streaming": { "enabled": true },
         "ping_interval": 30,
         "read_timeout": 60,
@@ -192,6 +198,44 @@ if [ -n "$PICOCLAW_LAUNCHER_TOKEN" ]; then
         -H "Content-Type: application/json" \
         -d "{\"password\": \"$PICOCLAW_LAUNCHER_TOKEN\", \"confirm\": \"$PICOCLAW_LAUNCHER_TOKEN\"}" \
         > /dev/null 2>&1 && echo "[entrypoint] Password set" || echo "[entrypoint] Password setup failed (maybe already set)"
+fi
+
+echo "[entrypoint] Logging into launcher..."
+LAUNCHER_COOKIE=$(mktemp)
+if curl -sf -c "$LAUNCHER_COOKIE" -X POST http://127.0.0.1:18800/api/auth/login \
+    -H "Content-Type: application/json" \
+    -d "{\"password\": \"$PICOCLAW_LAUNCHER_TOKEN\"}" \
+    > /dev/null 2>&1; then
+    echo "[entrypoint] Launcher login successful"
+else
+    echo "[entrypoint] Launcher login failed (may need initial setup)"
+    LAUNCHER_COOKIE=""
+fi
+
+echo "[entrypoint] Configuring pico channel..."
+if [ -n "$LAUNCHER_COOKIE" ] && curl -sf -b "$LAUNCHER_COOKIE" -X POST http://127.0.0.1:18800/api/pico/setup \
+    -H "Content-Type: application/json" \
+    -d "{\"token\": \"$PICO_TOKEN\"}" \
+    > /dev/null 2>&1; then
+    echo "[entrypoint] Pico channel configured"
+else
+    echo "[entrypoint] Pico setup failed (may need auth or already configured)"
+fi
+
+echo "[entrypoint] Starting gateway..."
+if [ -n "$LAUNCHER_COOKIE" ]; then
+    for i in $(seq 1 10); do
+        if curl -sf -b "$LAUNCHER_COOKIE" -X POST http://127.0.0.1:18800/api/gateway/start \
+            -H "Content-Type: application/json" \
+            -d '{}' > /dev/null 2>&1; then
+            echo "[entrypoint] Gateway started"
+            break
+        fi
+        if [ "$i" -eq 10 ]; then
+            echo "[entrypoint] WARNING: Could not start gateway"
+        fi
+        sleep 2
+    done
 fi
 
 echo "[entrypoint] All services running"
