@@ -57,8 +57,16 @@ if echo "$MODELS_JSON" | grep -q '"id"'; then
   DEFAULT_MODEL=""
   for model_id in $MODEL_IDS; do
     [ -z "$model_id" ] && continue
-    [ -z "$DEFAULT_MODEL" ] && DEFAULT_MODEL="$model_id"
+    case "$model_id" in
+      *instant*|*versatile*) DEFAULT_MODEL="$model_id" ;;
+    esac
   done
+  if [ -z "$DEFAULT_MODEL" ]; then
+    for model_id in $MODEL_IDS; do
+      [ -z "$model_id" ] && continue
+      [ -z "$DEFAULT_MODEL" ] && DEFAULT_MODEL="$model_id"
+    done
+  fi
 
   cat > /root/.picoclaw/config.json << CONFIGEOF
 {
@@ -137,13 +145,13 @@ else
   "version": 2,
   "agents": {
     "defaults": {
-      "model_name": "deepseek/deepseek-r1"
+      "model_name": "llama-3.1-8b-instant"
     }
   },
   "model_list": [
     {
-      "model_name": "deepseek/deepseek-r1",
-      "model": "openai/deepseek/deepseek-r1",
+      "model_name": "llama-3.1-8b-instant",
+      "model": "openai/llama-3.1-8b-instant",
       "api_base": "http://localhost:3001/v1",
       "api_keys": $FALLBACK_API_KEYS
     }
@@ -173,7 +181,7 @@ CONFIGEOF
   if [ -n "$PICOCLAW_API_KEY" ]; then
     cat > /root/.picoclaw/.security.yml << SECEOF
 model_list:
-  deepseek/deepseek-r1:0:
+  llama-3.1-8b-instant:0:
     api_keys:
       - "$PICOCLAW_API_KEY"
 SECEOF
@@ -220,6 +228,38 @@ if [ -n "$LAUNCHER_COOKIE" ] && curl -sf -b "$LAUNCHER_COOKIE" -X POST http://12
     echo "[entrypoint] Pico channel configured"
 else
     echo "[entrypoint] Pico setup failed (may need auth or already configured)"
+fi
+
+echo "[entrypoint] Setting up Groq channel in One API..."
+if [ -n "$GROQ_API_KEY" ]; then
+    # Login to One API as admin
+    ONEAPI_COOKIE=$(mktemp)
+    if curl -sf -c "$ONEAPI_COOKIE" -X POST "http://127.0.0.1:3001/api/user/login" \
+        -H "Content-Type: application/json" \
+        -d '{"username":"root","password":"123456"}' \
+        > /dev/null 2>&1; then
+        echo "[entrypoint] One API admin login successful"
+        # Check if Groq channel already exists
+        EXISTING=$(curl -sf -b "$ONEAPI_COOKIE" "http://127.0.0.1:3001/api/channel/" 2>/dev/null || echo "")
+        GROQ_EXISTS=$(echo "$EXISTING" | grep -o '"id":[0-9]*,"type":[0-9]*,"name":"Groq"' | grep -o 'id":[0-9]*' | grep -o '[0-9]*' || echo "")
+        if [ -n "$GROQ_EXISTS" ]; then
+            echo "[entrypoint] Groq channel already exists (ID: $GROQ_EXISTS)"
+        else
+            if curl -sf -b "$ONEAPI_COOKIE" -X POST "http://127.0.0.1:3001/api/channel/" \
+                -H "Content-Type: application/json" \
+                -d "{\"type\":1,\"name\":\"Groq\",\"models\":\"llama-3.1-8b-instant,deepseek-r1,deepseek/deepseek-r1\",\"model_mapping\":\"{\\\"deepseek-r1\\\":\\\"llama-3.1-8b-instant\\\",\\\"deepseek/deepseek-r1\\\":\\\"llama-3.1-8b-instant\\\",\\\"default\\\":\\\"llama-3.1-8b-instant\\\"}\",\"base_url\":\"https://api.groq.com/openai\",\"key\":\"$GROQ_API_KEY\",\"group\":\"default\"}" \
+                > /dev/null 2>&1; then
+                echo "[entrypoint] Groq channel created"
+            else
+                echo "[entrypoint] Groq channel creation failed"
+            fi
+        fi
+        rm -f "$ONEAPI_COOKIE"
+    else
+        echo "[entrypoint] One API admin login failed (password may have changed), skipping Groq setup"
+    fi
+else
+    echo "[entrypoint] GROQ_API_KEY not set, skipping Groq setup"
 fi
 
 echo "[entrypoint] Starting gateway..."

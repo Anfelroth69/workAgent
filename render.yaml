@@ -25,5 +25,7 @@ services:
         sync: false
       - key: PICOCLAW_LAUNCHER_TOKEN
         sync: false
+      - key: GROQ_API_KEY
+        sync: false
       - key: PORT
         value: "3000"
