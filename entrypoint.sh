@@ -52,7 +52,7 @@ fi
 if echo "$MODELS_JSON" | grep -q '"id"'; then
   echo "[entrypoint] Generating dynamic config from One API models..."
 
-  MODEL_IDS=$(echo "$MODELS_JSON" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
+  MODEL_IDS=$(echo "$MODELS_JSON" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | grep -v '^modelperm-' | sort -u)
 
   DEFAULT_MODEL=""
   for model_id in $MODEL_IDS; do
@@ -121,6 +121,7 @@ ENTRYEOF
 }
 CONFIGEOF
 
+  rm -f /root/.picoclaw/.security.yml
   cat > /root/.picoclaw/.security.yml << SECEOF
 model_list:
 SECEOF
