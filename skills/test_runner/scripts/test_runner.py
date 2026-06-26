@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,30 +19,44 @@ HOST = "127.0.0.1"
 PORT = 5002
 
 SKILLS_DIR = "/app/skills"
-ROOT_DIR = "/app"
+SCRAPERS = {
+    "elempleo": "scraper_elempleo",
+    "computrabajo": "scraper_computrabajo",
+    "indeed": "scraper_indeed",
+    "linkedin": "scraper_linkedin",
+}
 
 
 class TestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
+        qs = parse_qs(parsed.query)
         if parsed.path == "/api/test":
-            self.run_test()
+            self.run_test(qs)
         elif parsed.path == "/api/health":
             self.send_json({"status": "ok"})
         else:
             self.send_error(404, descricao="Not found")
 
-    def run_test(self):
-        scraper_path = os.path.join(SKILLS_DIR, "scraper_elempleo", "scripts", "scrape.py")
+    def run_test(self, qs):
+        scraper_name = qs.get("scraper", ["elempleo"])[0]
+        skill_dir = SCRAPERS.get(scraper_name)
+        if not skill_dir:
+            self.send_json({
+                "error": f"Unknown scraper '{scraper_name}'. Options: {', '.join(SCRAPERS.keys())}"
+            }, 400)
+            return
+
+        scraper_path = os.path.join(SKILLS_DIR, skill_dir, "scripts", "scrape.py")
         if not os.path.exists(scraper_path):
             self.send_json({"error": f"Scraper not found at {scraper_path}"}, 500)
             return
 
-        log.info("Running elempleo scraper...")
+        log.info("Running %s scraper...", scraper_name)
         try:
             result = subprocess.run(
-                [sys.executable, scraper_path, "--keywords", "call center", "--max-results", "5"],
-                capture_output=True, text=True, timeout=60,
+                [sys.executable, scraper_path, "--keywords", "call center", "--max-results", "3"],
+                capture_output=True, text=True, timeout=120,
             )
         except subprocess.TimeoutExpired:
             self.send_json({"error": "Scraper timed out"}, 500)
@@ -50,8 +64,9 @@ class TestHandler(BaseHTTPRequestHandler):
 
         if result.returncode != 0:
             self.send_json({
-                "error": "Scraper failed",
+                "error": f"{scraper_name} scraper failed",
                 "stderr": result.stderr[:1000],
+                "stdout": result.stdout[:500],
             }, 500)
             return
 
@@ -64,7 +79,7 @@ class TestHandler(BaseHTTPRequestHandler):
                 except json.JSONDecodeError as e:
                     log.warning("Skipping invalid JSON line: %s", e)
 
-        log.info("Scraped %d offers. Running matcher...", len(offers))
+        log.info("Scraped %d offers from %s. Running matcher...", len(offers), scraper_name)
         matcher_path = os.path.join(SKILLS_DIR, "matcher", "scripts", "match.py")
         matched = []
 
@@ -91,6 +106,7 @@ class TestHandler(BaseHTTPRequestHandler):
                 matched.append({**offer, "match_error": str(e)})
 
         self.send_json({
+            "scraper": scraper_name,
             "offers_scraped": len(offers),
             "offers_matched": len(matched),
             "results": matched,
