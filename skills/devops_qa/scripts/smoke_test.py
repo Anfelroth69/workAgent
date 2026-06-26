@@ -21,8 +21,11 @@ def report(status, check, detail=""):
 
 def fetch_json(url, timeout=30):
     req = urllib.request.Request(url)
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return json.loads(resp.read().decode("utf-8")), resp.status
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8")), resp.status
+    except urllib.error.HTTPError as e:
+        return {}, e.code
 
 
 def main():
