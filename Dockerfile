@@ -24,9 +24,9 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY supervisord.conf /etc/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh
 COPY skills/ /app/skills/
-COPY cv/ /app/cv/
 COPY config/ /app/config/
-COPY AGENTS.md /app/AGENTS.md
+# AGENTS.md injected via env var at runtime for privacy
+# CV (curriculum.md) injected via PICOCLAW_CV_BASE64 env var at runtime
 
 RUN chmod +x /entrypoint.sh
 

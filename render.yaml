@@ -31,5 +31,9 @@ services:
         sync: false
       - key: TELEGRAM_OWNER_ID
         sync: false
+      - key: PICOCLAW_CV_BASE64
+        sync: false
+      - key: ONEAPI_ADMIN_PASSWORD
+        generateValue: true
       - key: PORT
         value: "3000"

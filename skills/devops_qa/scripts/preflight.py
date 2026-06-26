@@ -238,6 +238,22 @@ def check_cv_exists():
     return report("pass", "CV", f"cv/curriculum.md ({size} bytes)")
 
 
+def check_security():
+    security_script = os.path.join(PROJECT_DIR, "skills", "security_audit", "scripts", "security_scan.py")
+    if not os.path.isfile(security_script):
+        return report("fail", "Security audit", "security_scan.py not found")
+    result = subprocess.run(
+        [sys.executable, security_script],
+        capture_output=True, text=True, timeout=60
+    )
+    for line in result.stdout.split("\n"):
+        if line.strip():
+            print(f"  {line}")
+    if result.returncode != 0:
+        return report("fail", "Security audit", f"exit code {result.returncode}")
+    return report("pass", "Security audit", "all checks passed")
+
+
 def main():
     print("=" * 60)
     print("  Pico Claw — Pre-flight Validation")
@@ -255,6 +271,7 @@ def main():
         ("Skill integrity", check_skill_integrity),
         ("CV integrity", check_cv_exists),
         ("No stale artifacts", check_no_pycache),
+        ("Security audit", check_security),
     ]
 
     passed = 0

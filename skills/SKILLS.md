@@ -15,6 +15,7 @@ Each skill has its own subdirectory. Every skill must have:
 | `telegram_bot/` | `specs/13-channel-telegram.md` | Telegram notifications | P1 | Implemented |
 | `orchestrator/` | `specs/15-scheduler-database.md` | Pipeline orchestration + scheduling | P1 | Implemented |
 | `devops_qa/` | `specs/16-skill-devops-qa.md` | Pre-deploy validation + smoke testing | P1 | Implemented |
+| `security_audit/` | `specs/17-skill-security-audit.md` | Security scanning (PII, secrets, CV exposure) | P1 | Implemented |
 
 ## Constitution Rules that bind skills
 - **Rule 9** — Never fabricate experience

@@ -30,6 +30,16 @@ SUPERVISOR_PID=$!
 
 mkdir -p /root/.picoclaw /root/.picoclaw/workspace/skills
 
+# Load CV from environment variable (base64 encoded) for privacy
+echo "[entrypoint] Loading CV from PICOCLAW_CV_BASE64..."
+if [ -n "$PICOCLAW_CV_BASE64" ]; then
+  mkdir -p /app/cv
+  echo "$PICOCLAW_CV_BASE64" | base64 -d > /app/cv/curriculum.md
+  echo "  ✅ CV loaded from env var ($(wc -c < /app/cv/curriculum.md) bytes)"
+else
+  echo "  ⚠️  PICOCLAW_CV_BASE64 not set, CV may be unavailable"
+fi
+
 echo "[entrypoint] Installing skills into Pico Claw workspace..."
 if [ -d /app/skills ]; then
   for skill_dir in /app/skills/*/; do
@@ -250,7 +260,7 @@ if [ -n "$GROQ_API_KEY" ]; then
     ONEAPI_COOKIE=$(mktemp)
     if curl -sf -c "$ONEAPI_COOKIE" -X POST "http://127.0.0.1:3001/api/user/login" \
         -H "Content-Type: application/json" \
-        -d '{"username":"root","password":"123456"}' \
+        -d "{\"username\":\"root\",\"password\":\"${ONEAPI_ADMIN_PASSWORD:-123456}\"}" \
         > /dev/null 2>&1; then
         echo "[entrypoint] One API admin login successful"
         # Check if Groq channel already exists

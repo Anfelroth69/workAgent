@@ -1,0 +1,25 @@
+# CV con datos personales — cargado via env var en produccion
+cv/
+data/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Environment and secrets
+.env
+.env.*
+*.log
+
+# System
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -23,7 +23,7 @@
 |--------|-------|---------|---------|
 | One API Root | 123456 (password) | Hardcoded in entrypoint.sh | Admin API access |
 | One API Token 1 | root-token-cambiar-en-dashboard | One API DB | (stale, restricted to deepseek/deepseek-r1) |
-| One API Token 2 | jHCqzNM7HZXY1zVY0a06Cd83D9B4492790719d3fE30b4fB3 | One API DB | Primary LLM access |
+| One API Token 2 | `[REDACTED - set via PICOCLAW_API_KEY env var]` | One API DB (set in Render dashboard) | Primary LLM access |
 | Pico Claw Launcher | PICOCLAW_LAUNCHER_TOKEN env var | Render env vars | Launcher WebUI + API auth |
 | Pico Channel | PICO_TOKEN (derived from launcher token) | Generated at runtime | WebSocket channel auth |
 | Groq | GROQ_API_KEY env var | Render env vars | LLM API access |

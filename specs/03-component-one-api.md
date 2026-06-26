@@ -31,7 +31,7 @@ justsong/one-api:latest — Go-based unified LLM proxy with load balancing, chan
 | ID | Key | Status | Quota | Models Restriction |
 |----|-----|--------|-------|-------------------|
 | 1 | root-token-cambiar-en-dashboard | Enabled | Unlimited | deepseek/deepseek-r1 (**stale**) |
-| 2 | jHCqzNM7HZXY1zVY0a06Cd83D9B4492790719d3fE30b4fB3 | Enabled | Unlimited | None |
+| 2 | `[REDACTED - set via PICOCLAW_API_KEY env var]` | Enabled | Unlimited | None |
 
 **Note**: Token ID 1 has a stale model restriction. The gateway uses PICOCLAW_API_KEY env var which maps to one of these tokens via entrypoint.sh.
 
