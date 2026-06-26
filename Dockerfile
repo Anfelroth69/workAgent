@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir playwright playwright-stealth requests beautifulsoup4 pyyaml
+RUN pip install --no-cache-dir playwright playwright-stealth requests beautifulsoup4 pyyaml python-telegram-bot apscheduler
 
 COPY --from=launcher /usr/local/bin/picoclaw /usr/local/bin/picoclaw
 COPY --from=launcher /usr/local/bin/picoclaw-launcher /usr/local/bin/picoclaw-launcher
