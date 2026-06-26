@@ -23,16 +23,32 @@ jobs:
       - name: Run preflight
         run: python3 skills/devops_qa/scripts/preflight.py
 
+      - name: Debug secrets availability
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "FAIL: RENDER_DEPLOY_HOOK secret is empty or not set"
+            exit 1
+          fi
+          echo "RENDER_DEPLOY_HOOK is set (${RENDER_DEPLOY_HOOK:0:40}...)"
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+
       - name: Trigger Render deploy
         id: trigger
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
         run: |
           echo "Triggering deploy..."
-          RESPONSE=$(curl -s -X POST "$RENDER_DEPLOY_HOOK")
-          DEPLOY_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))")
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$RENDER_DEPLOY_HOOK")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "HTTP $HTTP_CODE — Response: $BODY"
+          if [ "$HTTP_CODE" != "200" ]; then
+            exit 1
+          fi
+          DEPLOY_ID=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))" 2>/dev/null || echo "")
           if [ -z "$DEPLOY_ID" ]; then
-            echo "Failed to get deploy ID. Response: $RESPONSE"
+            echo "Failed to extract deploy ID from response"
             exit 1
           fi
           echo "deploy_id=$DEPLOY_ID" >> "$GITHUB_OUTPUT"

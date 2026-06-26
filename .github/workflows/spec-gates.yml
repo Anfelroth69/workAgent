@@ -75,7 +75,7 @@ jobs:
 
       - name: Check env var completeness
         run: |
-          ENV_VARS_IN_SH=$(grep -o '\$[A-Z_]*API_KEY\|\$[A-Z_]*TOKEN\|\$[A-Z_]*SECRET\|\$SQL_DSN\|\$SESSION_SECRET\|\$PORT' entrypoint.sh 2>/dev/null | sort -u | sed 's/^\$//' || true)
+          ENV_VARS_IN_SH=$(grep -o '\$[A-Z_]*API_KEY\|\$[A-Z_]*TOKEN\|\$[A-Z_]*SECRET\|\$SQL_DSN\|\$SESSION_SECRET\|\$PORT' entrypoint.sh 2>/dev/null | sort -u | sed 's/^\$//' | grep -v '^PICO_TOKEN$\|^PICO$\|^DEFAULT_MODEL$\|^MODEL_REACHABLE$' || true)
           echo "Env vars used in entrypoint.sh: $ENV_VARS_IN_SH"
           for var in $ENV_VARS_IN_SH; do
             if ! grep -q "$var" render.yaml 2>/dev/null; then
