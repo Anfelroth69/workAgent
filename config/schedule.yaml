@@ -1,0 +1,13 @@
+# Scheduler Configuration
+# Referenced by specs/15-scheduler-database.md
+
+automatic: true
+frequency: "0 */4 * * *"  # Every 4 hours (cron)
+timezone: "Europe/Madrid"
+notify_only_new: true
+
+# Database cleanup
+cleanup:
+  seen_offers_days: 30
+  provider_usage_days: 7
+  search_history_days: 90

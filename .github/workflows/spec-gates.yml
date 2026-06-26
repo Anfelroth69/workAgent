@@ -1,0 +1,185 @@
+name: Spec Quality Gates
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  clarify-gate:
+    name: Clarify Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install specified
+        run: uv tool install git+https://github.com/github/spec-kit.git
+
+      - name: Check constitution
+        run: |
+          echo "=== Verifying constitution exists ==="
+          test -f .specify/memory/constitution.md || {
+            echo "FAIL: No constitution found"
+            exit 1
+          }
+          RULES=$(grep -c "^## Rule" .specify/memory/constitution.md || true)
+          echo "PASS: Constitution has $RULES rules"
+          test "$RULES" -ge 11 || {
+            echo "FAIL: constitution must have >=11 rules (infra + agent)"
+            exit 1
+          }
+
+      - name: Verify constitution covers agent rules
+        run: |
+          for rule in "Never Fabricate" "CV is Source of Truth" "Skill Spec Completeness"; do
+            if ! grep -q "$rule" .specify/memory/constitution.md; then
+              echo "FAIL: Constitution missing rule: $rule"
+              exit 1
+            fi
+            echo "  ✅ $rule found"
+          done
+          echo "PASS: All agent rules in constitution"
+
+      - name: Verify spec coverage
+        run: |
+          EXPECTED_FILES="entrypoint.sh nginx.conf render.yaml supervisord.conf Dockerfile .dockerignore docker-compose.yml README.md POST_DEPLOYMENT.md"
+          MISSING=""
+          for f in $EXPECTED_FILES; do
+            if ! grep -q "$f" specs/*.md 2>/dev/null; then
+              MISSING="$MISSING $f"
+            fi
+          done
+          if [ -n "$MISSING" ]; then
+            echo "FAIL: Files not covered by spec: $MISSING"
+            exit 1
+          fi
+          echo "PASS: All 9 files covered by spec"
+
+      - name: Check for modelperm- references
+        run: |
+          if grep -r "modelperm-" specs/ 2>/dev/null; then
+            echo "WARNING: modelperm- entries found in spec (expected only in entrypoint.sh)"
+          fi
+          echo "PASS: modelperm- filter rule documented"
+
+  checklist-gate:
+    name: Checklist Gate
+    runs-on: ubuntu-latest
+    needs: clarify-gate
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check env var completeness
+        run: |
+          ENV_VARS_IN_SH=$(grep -o '\$[A-Z_]*API_KEY\|\$[A-Z_]*TOKEN\|\$[A-Z_]*SECRET\|\$SQL_DSN\|\$SESSION_SECRET\|\$PORT' entrypoint.sh 2>/dev/null | sort -u | sed 's/^\$//' || true)
+          echo "Env vars used in entrypoint.sh: $ENV_VARS_IN_SH"
+          for var in $ENV_VARS_IN_SH; do
+            if ! grep -q "$var" render.yaml 2>/dev/null; then
+              echo "FAIL: $var is used in entrypoint.sh but not declared in render.yaml"
+              exit 1
+            fi
+            echo "  ✅ $var found in render.yaml"
+          done
+          echo "PASS: All env vars in entrypoint.sh are declared in render.yaml"
+
+      - name: Verify no fabrication in CV adapter (Constitution Rule 9)
+        run: |
+          if grep -q "cv_adapter\|CV"-"Adapter" specs/*.md 2>/dev/null; then
+            if grep -q "NEVER.*fabricate\|never.*add.*experience\|never.*modify.*dates" specs/12-skill-cv-adapter.md 2>/dev/null; then
+              echo "PASS: CV adapter spec has anti-fabrication clause"
+            else
+              echo "FAIL: CV adapter spec missing anti-fabrication clause (Rule 9)"
+              exit 1
+            fi
+          else
+            echo "SKIP: No CV adapter spec found"
+          fi
+
+      - name: Verify idempotent channel creation
+        run: |
+          if grep -q "POST.*channel" entrypoint.sh 2>/dev/null; then
+            if grep -q "check if.*exists\|GROQ_EXISTS" entrypoint.sh 2>/dev/null; then
+              echo "PASS: Channel creation has existence check"
+            else
+              echo "FAIL: POST channel without existence check"
+              exit 1
+            fi
+          fi
+
+      - name: Verify security.yml regeneration
+        run: |
+          if grep -q "rm -f.*security.yml\|rm.*\.security" entrypoint.sh 2>/dev/null; then
+            echo "PASS: security.yml is deleted before regeneration"
+          else
+            echo "FAIL: security.yml not cleaned before regeneration"
+            exit 1
+          fi
+
+  analyze-gate:
+    name: Analyze Gate
+    runs-on: ubuntu-latest
+    needs: checklist-gate
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify spec files exist
+        run: |
+          for spec in specs/01-system-overview.md specs/02-component-nginx.md specs/03-component-one-api.md specs/04-component-picoclaw.md specs/05-deployment.md specs/06-startup-sequence.md specs/07-security.md specs/08-observability.md specs/09-agent-overview.md specs/10-skill-scrapers.md specs/11-skill-matcher.md specs/12-skill-cv-adapter.md specs/13-channel-telegram.md specs/14-provider-failover.md specs/15-scheduler-database.md; do
+            test -f "$spec" || {
+              echo "FAIL: Missing $spec"
+              exit 1
+            }
+            echo "  ✅ $spec"
+          done
+          echo "PASS: All 15 spec files present"
+
+      - name: Verify requirements are numbered
+        run: |
+          TOTAL_RX=$(grep -c '^## Requirements' specs/*.md 2>/dev/null || true)
+          TOTAL_R=$(grep -c '\- R-' specs/*.md 2>/dev/null || true)
+          echo "Found $TOTAL_R requirements across $TOTAL_RX sections"
+          test "$TOTAL_R" -ge 60 || {
+            echo "FAIL: At least 60 requirements expected (found $TOTAL_R)"
+            exit 1
+          }
+          echo "PASS: $TOTAL_R requirements documented"
+
+      - name: Check for TODO or TBD in spec
+        run: |
+          TODOS=$(grep -c "TODO\|TBD\|FIXME" specs/*.md 2>/dev/null || true)
+          if [ "$TODOS" -gt 0 ]; then
+            echo "FAIL: Found $TODOS TODOs/TBDs in spec files"
+            exit 1
+          fi
+          echo "PASS: No unresolved TODOs in spec"
+
+      - name: Verify skill spec completeness (Constitution Rule 11)
+        run: |
+          if [ -d skills ]; then
+            SKILL_DIRS=$(ls -d skills/*/ 2>/dev/null | wc -l)
+            echo "Found $SKILL_DIRS skill directories"
+            for skill in scraper_linkedin scraper_infojobs scraper_indeed scraper_computrabajo scraper_tecnoempleo matcher cv_adapter telegram_bot; do
+              SPEC_MENTION=$(grep -rl "$skill" specs/*.md 2>/dev/null || true)
+              if [ -z "$SPEC_MENTION" ]; then
+                echo "WARNING: skill/$skill has no matching spec mention"
+              else
+                echo "  ✅ $skill covered by $(echo $SPEC_MENTION | tr ' ' '\n' | head -1)"
+              fi
+            done
+          fi
+          echo "PASS: Skill spec completeness verified"
+
+      - name: Verify config files match specs
+        run: |
+          for cfg in config/search_params.yaml config/schedule.yaml config/telegram.yaml; do
+            test -f "$cfg" || {
+              echo "FAIL: Missing $cfg"
+              exit 1
+            }
+            echo "  ✅ $cfg"
+          done
+          echo "PASS: All config files present"

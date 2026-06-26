@@ -1,0 +1,46 @@
+# Search Parameters
+# Referenced by specs/10-skill-scrapers.md
+# Auto-populated from CV keywords if empty
+
+keywords:
+  - "call center"
+  - "ventas por teléfono"
+  - "agente telefónico"
+  - "atención al cliente"
+  - "telemarketing"
+  - "customer service"
+  - "ventas consultivas"
+  - "cross selling"
+  - "asesor comercial"
+  - "contact center"
+  - "BPO"
+
+location: "Colombia"
+modality:
+  - remote
+  - presencial
+  - hibrido
+experience_level:
+  - junior
+  - mid
+  - senior
+date_posted: "ultimas 24h"
+portals:
+  - computrabajo
+  - elempleo
+  - indeed
+  - linkedin
+
+# Thresholds (referenced by specs/11-skill-matcher.md)
+match_thresholds:
+  auto_notify: 70    # >= 70% → notify immediately
+  possible_adapt: 50 # 50-69% → flag for CV adaptation
+  discard: 0         # < 50% → log and discard
+
+  # Weights
+weights:
+  technical_skills: 50
+  experience_level: 20
+  modality_location: 15
+  industry_sector: 10
+  language: 5

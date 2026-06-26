@@ -1,0 +1,13 @@
+# Telegram Bot Configuration
+# Referenced by specs/13-channel-telegram.md
+
+bot_token: "${TELEGRAM_BOT_TOKEN}"  # From env var
+owner_id: 0                          # Set your Telegram user ID
+commands:
+  buscar: true       # /buscar — manual search
+  estado: true       # /estado — provider health + API status
+  config: true       # /config — view current params (owner only)
+  cv: true           # /cv — download current CV (owner only)
+  historial: true    # /historial — last 7 days offers
+  adaptar: true      # /adaptar_<id> — generate adapted CV (owner only)
+  rechazar: true     # /rechazar_<id> — reject adapted CV (owner only)

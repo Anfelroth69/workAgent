@@ -28,7 +28,20 @@ echo "[entrypoint] Starting supervisord..."
 /usr/bin/supervisord -c /etc/supervisord.conf &
 SUPERVISOR_PID=$!
 
-mkdir -p /root/.picoclaw
+mkdir -p /root/.picoclaw /root/.picoclaw/workspace/skills
+
+echo "[entrypoint] Installing skills into Pico Claw workspace..."
+if [ -d /app/skills ]; then
+  for skill_dir in /app/skills/*/; do
+    skill_name=$(basename "$skill_dir")
+    [ "$skill_name" = "SKILLS.md" ] && continue
+    if [ -f "$skill_dir/SKILL.md" ]; then
+      mkdir -p "/root/.picoclaw/workspace/skills/$skill_name"
+      cp -r "$skill_dir"/* "/root/.picoclaw/workspace/skills/$skill_name/"
+      echo "  ✅ Installed skill: $skill_name"
+    fi
+  done
+fi
 
 echo "[entrypoint] Waiting for One API on port 3001..."
 for i in $(seq 1 15); do
@@ -263,20 +276,43 @@ else
     echo "[entrypoint] GROQ_API_KEY not set, skipping Groq setup"
 fi
 
-echo "[entrypoint] Starting gateway..."
-if [ -n "$LAUNCHER_COOKIE" ]; then
-    for i in $(seq 1 10); do
-        if curl -sf -b "$LAUNCHER_COOKIE" -X POST http://127.0.0.1:18800/api/gateway/start \
-            -H "Content-Type: application/json" \
-            -d '{}' > /dev/null 2>&1; then
-            echo "[entrypoint] Gateway started"
+echo "[entrypoint] Validating model reachability before gateway start..."
+DEFAULT_MODEL=$(grep -o '"model_name":"[^"]*"' /root/.picoclaw/config.json 2>/dev/null | head -1 | cut -d'"' -f4)
+MODEL_REACHABLE=false
+if [ -n "$DEFAULT_MODEL" ] && [ -n "$PICOCLAW_API_KEY" ]; then
+    for i in $(seq 1 5); do
+        AVAILABLE=$(curl -sf http://127.0.0.1:3001/v1/models \
+            -H "Authorization: Bearer $PICOCLAW_API_KEY" 2>/dev/null \
+            | grep -o '"id":"[^"]*"' | grep -c "$DEFAULT_MODEL" || true)
+        if [ "$AVAILABLE" -gt 0 ]; then
+            MODEL_REACHABLE=true
+            echo "[entrypoint] Model $DEFAULT_MODEL is reachable"
             break
         fi
-        if [ "$i" -eq 10 ]; then
-            echo "[entrypoint] WARNING: Could not start gateway"
-        fi
-        sleep 2
+        echo "[entrypoint] Attempt $i/5: model $DEFAULT_MODEL not found in /v1/models. Retrying in $((i * 2))s..."
+        sleep $((i * 2))
     done
+fi
+
+if [ "$MODEL_REACHABLE" = true ]; then
+    echo "[entrypoint] Starting gateway..."
+    if [ -n "$LAUNCHER_COOKIE" ]; then
+        for i in $(seq 1 10); do
+            if curl -sf -b "$LAUNCHER_COOKIE" -X POST http://127.0.0.1:18800/api/gateway/start \
+                -H "Content-Type: application/json" \
+                -d '{}' > /dev/null 2>&1; then
+                echo "[entrypoint] Gateway started"
+                break
+            fi
+            if [ "$i" -eq 10 ]; then
+                echo "[entrypoint] WARNING: Could not start gateway"
+            fi
+            sleep 2
+        done
+    fi
+else
+    echo "[entrypoint] ERROR: Default model $DEFAULT_MODEL not reachable in One API. Gateway NOT started."
+    echo "[entrypoint] Check that: (1) One API channel has this model, (2) PICOCLAW_API_KEY is correct, (3) LLM provider is healthy"
 fi
 
 echo "[entrypoint] All services running"
