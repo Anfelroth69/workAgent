@@ -54,21 +54,23 @@ def main():
         report("fail", "Health endpoint", str(e))
         failed += 1
 
-    # One API reachable
+    # One API reachable (endpoint requires auth, 401 means it's alive)
     try:
         data, status = fetch_json(f"{base_url}/v1/models")
-        if status == 200 and isinstance(data, dict):
+        if status == 200:
             models = data.get("data", [])
             if models:
                 model_names = [m.get("id", "?") for m in models[:5]]
                 report("pass", "One API models",
-                       f"{len(models)} models available: {', '.join(model_names)}")
-                passed += 1
+                       f"{len(models)} models: {', '.join(model_names)}")
             else:
-                report("pass", "One API models", "endpoint reachable but no models")
-                passed += 1
+                report("pass", "One API models", "endpoint reachable, no models")
+            passed += 1
+        elif status == 401:
+            report("pass", "One API models", "endpoint reachable (auth required)")
+            passed += 1
         else:
-            report("fail", "One API models", f"expected 200 with data, got {status}")
+            report("fail", "One API models", f"unexpected status {status}")
             failed += 1
     except Exception as e:
         report("fail", "One API models", str(e))
