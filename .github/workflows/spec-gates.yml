@@ -28,8 +28,8 @@ jobs:
           }
           RULES=$(grep -c "^## Rule" .specify/memory/constitution.md || true)
           echo "PASS: Constitution has $RULES rules"
-          test "$RULES" -ge 11 || {
-            echo "FAIL: constitution must have >=11 rules (infra + agent)"
+          test "$RULES" -ge 12 || {
+            echo "FAIL: constitution must have >=12 rules (infra + agent + devops)"
             exit 1
           }
 
@@ -128,22 +128,22 @@ jobs:
 
       - name: Verify spec files exist
         run: |
-          for spec in specs/01-system-overview.md specs/02-component-nginx.md specs/03-component-one-api.md specs/04-component-picoclaw.md specs/05-deployment.md specs/06-startup-sequence.md specs/07-security.md specs/08-observability.md specs/09-agent-overview.md specs/10-skill-scrapers.md specs/11-skill-matcher.md specs/12-skill-cv-adapter.md specs/13-channel-telegram.md specs/14-provider-failover.md specs/15-scheduler-database.md; do
+          for spec in specs/01-system-overview.md specs/02-component-nginx.md specs/03-component-one-api.md specs/04-component-picoclaw.md specs/05-deployment.md specs/06-startup-sequence.md specs/07-security.md specs/08-observability.md specs/09-agent-overview.md specs/10-skill-scrapers.md specs/11-skill-matcher.md specs/12-skill-cv-adapter.md specs/13-channel-telegram.md specs/14-provider-failover.md specs/15-scheduler-database.md specs/16-skill-devops-qa.md; do
             test -f "$spec" || {
               echo "FAIL: Missing $spec"
               exit 1
             }
             echo "  ✅ $spec"
           done
-          echo "PASS: All 15 spec files present"
+          echo "PASS: All 16 spec files present"
 
       - name: Verify requirements are numbered
         run: |
           TOTAL_RX=$(grep -c '^## Requirements' specs/*.md 2>/dev/null || true)
           TOTAL_R=$(grep -c '\- R-' specs/*.md 2>/dev/null || true)
           echo "Found $TOTAL_R requirements across $TOTAL_RX sections"
-          test "$TOTAL_R" -ge 60 || {
-            echo "FAIL: At least 60 requirements expected (found $TOTAL_R)"
+          test "$TOTAL_R" -ge 65 || {
+            echo "FAIL: At least 65 requirements expected (found $TOTAL_R)"
             exit 1
           }
           echo "PASS: $TOTAL_R requirements documented"

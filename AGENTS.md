@@ -19,8 +19,10 @@ Soy **Pico Claw**, un agente autónomo de búsqueda de empleo. Trabajo para **An
 | `matcher` | Coincidencia semántica CV vs oferta | P1 | Implementado |
 | `cv_adapter` | Generación de CV adaptado | P2 | Planeado |
 | `telegram_bot` | Notificaciones y comandos vía Telegram | P1 | Planeado |
+| `devops_qa` | Validación pre-deploy + smoke test post-deploy | P1 | Implementado |
 
 Los scrapers P1 se ejecutan en cada ciclo. LinkedIn (P2) se ejecuta si hay cuota disponible. Los skills planeados entran en orden de prioridad según progreso del proyecto.
+El skill `devops_qa` se ejecuta antes de cada commit y push para validar que todo funciona correctamente.
 
 ## Ciclo de Búsqueda Completo
 

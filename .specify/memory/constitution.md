@@ -132,6 +132,17 @@ amendment via /speckit.constitution.
   dependent skills break silently.
 **Check**: `ls specs/skills/` matches all skill names in `ls skills/`.
 
+## Rule 12: Pre-deploy Validation Gate
+**Statement**: Before every push to main, the `devops_qa` preflight script
+  MUST pass all checks. No commit that breaks Python syntax, YAML validity,
+  spec coverage, constitution rules, or env var completeness may be pushed.
+**Enforcement**: HARD — preflight runs locally before commit; CI gate checks
+  spec coverage and constitution rules. If preflight fails, commit is blocked.
+**Bug Prevented**: Deploying broken code that fails the Render build.
+**Failure Mode**: Build fails on Render after 5+ minute wait; wasted
+  time and quota.
+**Check**: `python3 skills/devops_qa/scripts/preflight.py` exits with code 0.
+
 ---
 
 ## Appendix: Enforcement Levels

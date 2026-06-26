@@ -41,6 +41,7 @@ Pico Claw Gateway/CLI
 | matcher | Tool | Semantic CV vs offer comparison | P1 | Implemented |
 | cv_adapter | Tool | Generate tailored CV version | P2 | Planned |
 | telegram_bot | Channel | Notifications + commands | P1 | Planned |
+| devops_qa | Tool | Pre-deploy validation + post-deploy smoke test | P1 | Implemented |
 
 ## Requirements
 - R-AG-001: Agent MUST use One API as the sole LLM endpoint

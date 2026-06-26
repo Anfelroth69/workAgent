@@ -13,6 +13,7 @@ Each skill has its own subdirectory. Every skill must have:
 | `matcher/` | `specs/11-skill-matcher.md` | CV vs offer matching | P1 | Implemented |
 | `cv_adapter/` | `specs/12-skill-cv-adapter.md` | Tailored CV generation | P2 | Planned |
 | `telegram_bot/` | `specs/13-channel-telegram.md` | Telegram notifications | P1 | Planned |
+| `devops_qa/` | `specs/16-skill-devops-qa.md` | Pre-deploy validation + smoke testing | P1 | Implemented |
 
 ## Constitution Rules that bind skills
 - **Rule 9** — Never fabricate experience
