@@ -1,19 +1,26 @@
 FROM docker.io/sipeed/picoclaw:launcher AS launcher
 FROM justsong/one-api:latest AS one-api
 
-FROM alpine:3.21
+FROM python:3.12-slim
 
-RUN apk add --no-cache supervisor postgresql-client nginx ca-certificates tzdata curl \
-    python3 py3-pip py3-yaml py3-beautifulsoup4 py3-requests \
-    chromium
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    supervisor \
+    nginx \
+    postgresql-client \
+    ca-certificates \
+    curl \
+    chromium \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --break-system-packages --no-cache-dir playwright playwright-stealth
+RUN pip install --no-cache-dir playwright playwright-stealth
 
 COPY --from=launcher /usr/local/bin/picoclaw /usr/local/bin/picoclaw
 COPY --from=launcher /usr/local/bin/picoclaw-launcher /usr/local/bin/picoclaw-launcher
 COPY --from=one-api /one-api /one-api
 
-COPY nginx.conf /etc/nginx/http.d/default.conf
+RUN mkdir -p /etc/nginx/conf.d && \
+    ln -sf /etc/nginx/conf.d /etc/nginx/http.d
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY supervisord.conf /etc/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh
 COPY skills/ /app/skills/
