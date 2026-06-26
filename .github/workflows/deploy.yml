@@ -89,8 +89,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Warmup - wait for service readiness
+        run: |
+          URL="https://one-api-picoclaw.onrender.com"
+          echo "Waiting for service at $URL..."
+          for i in $(seq 12); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL/api/status" 2>/dev/null || echo "000")
+            echo "Attempt $i/12: HTTP $STATUS"
+            [ "$STATUS" = "200" ] && echo "Service ready!" && exit 0
+            sleep 10
+          done
+          echo "Service not ready after 120s"
+          exit 1
+
       - name: Run smoke test
         run: |
-          pip install pyyaml
           python3 skills/devops_qa/scripts/smoke_test.py \
             --url https://one-api-picoclaw.onrender.com

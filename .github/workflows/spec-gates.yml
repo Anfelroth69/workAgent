@@ -139,8 +139,8 @@ jobs:
 
       - name: Verify requirements are numbered
         run: |
-          TOTAL_RX=$(grep -c '^## Requirements' specs/*.md 2>/dev/null || true)
-          TOTAL_R=$(grep -c '\- R-' specs/*.md 2>/dev/null || true)
+          TOTAL_RX=$(grep -c '^## Requirements' specs/*.md 2>/dev/null | awk -F: '{sum+=$2} END {print sum+0}' || true)
+          TOTAL_R=$(grep '\- R-' specs/*.md 2>/dev/null | wc -l)
           echo "Found $TOTAL_R requirements across $TOTAL_RX sections"
           test "$TOTAL_R" -ge 65 || {
             echo "FAIL: At least 65 requirements expected (found $TOTAL_R)"
