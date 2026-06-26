@@ -7,7 +7,7 @@ RUN apk add --no-cache supervisor postgresql-client nginx ca-certificates tzdata
     python3 py3-pip py3-yaml py3-beautifulsoup4 py3-requests \
     chromium
 
-RUN pip3 install playwright playwright-stealth
+RUN pip3 install --break-system-packages --no-cache-dir playwright playwright-stealth
 
 COPY --from=launcher /usr/local/bin/picoclaw /usr/local/bin/picoclaw
 COPY --from=launcher /usr/local/bin/picoclaw-launcher /usr/local/bin/picoclaw-launcher
