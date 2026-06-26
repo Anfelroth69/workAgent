@@ -46,7 +46,7 @@ jobs:
           if [ "$HTTP_CODE" != "200" ]; then
             exit 1
           fi
-          DEPLOY_ID=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))" 2>/dev/null || echo "")
+          DEPLOY_ID=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin).get('deploy',{}).get('id',''))" 2>/dev/null || echo "")
           if [ -z "$DEPLOY_ID" ]; then
             echo "Failed to extract deploy ID from response"
             exit 1
