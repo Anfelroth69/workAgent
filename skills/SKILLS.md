@@ -16,6 +16,8 @@ Each skill has its own subdirectory. Every skill must have:
 | `orchestrator/` | `specs/15-scheduler-database.md` | Pipeline orchestration + scheduling | P1 | Implemented |
 | `devops_qa/` | `specs/16-skill-devops-qa.md` | Pre-deploy validation + smoke testing | P1 | Implemented |
 | `security_audit/` | `specs/17-skill-security-audit.md` | Security scanning (PII, secrets, CV exposure) | P1 | Implemented |
+| `scraper_trabajoremoto/` | `specs/18-skill-scraper-trabajoremoto.md` | TrabajoRemoto.com Colombia | Playwright + stealth | P2 | Implemented |
+| `scraper_weremoto/` | `specs/19-skill-scraper-weremoto.md` | WeRemoto.com LATAM | Playwright | P2 | Implemented |
 
 ## Constitution Rules that bind skills
 - **Rule 9** — Never fabricate experience

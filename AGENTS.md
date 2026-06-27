@@ -21,8 +21,10 @@ Soy **Pico Claw**, un agente autónomo de búsqueda de empleo. Trabajo para **${
 | `telegram_bot` | Notificaciones y comandos vía Telegram | P1 | Implementado |
 | `orchestrator` | Orquestación del pipeline completo | P1 | Implementado |
 | `devops_qa` | Validación pre-deploy + smoke test post-deploy | P1 | Implementado |
+| `scraper_trabajoremoto` | TrabajoRemoto.com Colombia | P2 | Implementado |
+| `scraper_weremoto` | WeRemoto.com LATAM | P2 | Implementado |
 
-Los scrapers P1 se ejecutan en cada ciclo. LinkedIn (P2) se ejecuta si hay cuota disponible. El orquestador ejecuta el pipeline completo cada 4 horas automáticamente.
+Los scrapers P1 se ejecutan en cada ciclo. LinkedIn (P2) se ejecuta si hay cuota disponible. TrabajoRemoto y WeRemoto (P2) se ejecutan después de los P1 si hay tiempo de ciclo disponible. El orquestador ejecuta el pipeline completo cada 4 horas automáticamente.
 El skill `devops_qa` se ejecuta antes de cada commit y push para validar que todo funciona correctamente.
 
 ## Ciclo de Búsqueda Completo

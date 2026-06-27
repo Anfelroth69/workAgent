@@ -30,6 +30,8 @@ portals:
   - elempleo
   - indeed
   - linkedin
+  - trabajoremoto
+  - weremoto
 
 # Thresholds (referenced by specs/11-skill-matcher.md)
 match_thresholds:

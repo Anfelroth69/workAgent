@@ -42,6 +42,8 @@ SKILL_DIR_MAP = {
     "elempleo": "scraper_elempleo",
     "indeed": "scraper_indeed",
     "linkedin": "scraper_linkedin",
+    "trabajoremoto": "scraper_trabajoremoto",
+    "weremoto": "scraper_weremoto",
 }
 
 

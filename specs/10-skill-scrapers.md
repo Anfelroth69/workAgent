@@ -11,8 +11,8 @@ Scrape job listings from configured portals, normalize into a common format, and
 | elempleo.com | BS4 + requests | `elempleo.com` | P1 |
 | Indeed Colombia | Playwright + BS4 | `co.indeed.com` | P1 |
 | LinkedIn Colombia | BS4 + requests | `co.linkedin.com` | P2 |
-| TrabajoRemoto.com | BS4 + requests | `trabajoremoto.com` | P2 |
-| Remotistas | BS4 + requests | `remotistas.com` | P3 |
+| TrabajoRemoto.com | Playwright + stealth | `trabajoremoto.com` | P2 |
+| WeRemoto | Playwright | `weremoto.com` | P2 |
 
 ## Common Output Format
 
@@ -91,19 +91,23 @@ Keywords are extracted from CV automatically if empty.
 
 ### TrabajoRemoto.com
 - Domain: `trabajoremoto.com`
-- Method: BS4, parse job listing cards
+- Search URL: `https://trabajoremoto.com/?s=[keywords]`
+- Method: Playwright + stealth for Cloudflare WAF bypass; falls back to requests
+- Parsing: BS4 on rendered HTML, flexible card selectors (article, .job, .card, etc.)
 - Rate limit: 2s between requests
-- Note: Keywords in Spanish for LatAM remote jobs
+- Note: Site behind Cloudflare; Playwright with stealth (mobile UA fallback) required
 
-### Remotistas
-- Domain: `remotistas.com`
-- Method: BS4, parse listing cards
+### WeRemoto
+- Domain: `weremoto.com`
+- Search URL: `https://www.weremoto.com/search?query=[keywords]`
+- Method: Playwright for JS-rendered Webflow CMS content; falls back to requests
+- Parsing: BS4 on rendered HTML, select `div.job-item-accordion.w-dyn-item` cards
 - Rate limit: 2s between requests
-- Note: Keywords in Spanish for LatAM remote jobs
+- Note: Webflow CMS site; full job list loaded via client-side JS
 
 ## Requirements
 - R-SCR-001: Each scraper MUST handle 429/403 gracefully (retry with backoff)
-- R-SCR-002: Scrapers MUST use Playwright for WAF/Cloudflare-protected portals (Computrabajo, Indeed); BS4 + requests is sufficient for static portals (elempleo, LinkedIn, TrabajoRemoto)
+- R-SCR-002: Scrapers MUST use Playwright for WAF/Cloudflare-protected portals (Computrabajo, Indeed, TrabajoRemoto) and JS-rendered portals (WeRemoto); BS4 + requests is sufficient for static portals (elempleo, LinkedIn)
 - R-SCR-003: All scrapers MUST output the common normalized format
 - R-SCR-004: Failed scrapes MUST log the error and continue (never block)
 - R-SCR-005: Deduplication by URL MUST happen at the matcher level
